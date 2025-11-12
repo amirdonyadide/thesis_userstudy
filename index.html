@@ -33,7 +33,7 @@
   <div id="done" class="hidden"><h3>Thanks!</h3></div>
 
 <script>
-const API = 'YOUR_APPS_SCRIPT_WEB_APP_URL'; // ends with /exec
+const API = 'https://script.google.com/macros/s/AKfycbwy-WwkVBq7iDytfCG7g-vGulbr0SmE2RAOCxR6dL-vFVWV26eQIAMXB6Jfr2jVdQQ31A/exec'; // ends with /exec
 
 let trials=[], idx=0, participant='', tStart=0;
 let current = null;
@@ -67,7 +67,7 @@ qs('#submit').onclick = async ()=>{
   const fd = new URLSearchParams({
     action:'submit',
     participant_id: participant,
-    assignment_id: '',  // (optional) if you want to echo back IDs, include in init payload
+    assignment_id: current.assignment_id,
     tile_id: current.tile_id,
     free_text: txt,
     duration_ms: String(dur),
