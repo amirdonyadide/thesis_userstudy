@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Map Generalization Prompt Study</title>
+  <style>
+    body{font-family:sans-serif;max-width:900px;margin:0 auto;padding:16px;}
+    .maps{display:flex;gap:8px}
+    .maps img{width:50%;border:1px solid #ddd}
+    textarea{width:100%;height:120px}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <h1>Map Prompt Study</h1>
+  <p>Write one concise sentence to transform the left map into the right map.</p>
+
+  <div id="welcome">
+    <button id="start">Start</button>
+  </div>
+
+  <div id="trial" class="hidden">
+    <h3 id="counter"></h3>
+    <div class="maps">
+      <img id="imgL" alt="Input map">
+      <img id="imgR" alt="Generalized map">
+    </div>
+    <textarea id="text" placeholder="e.g., strongly simplify small parcels"></textarea>
+    <button id="submit">Submit</button>
+  </div>
+
+  <div id="done" class="hidden"><h3>Thanks!</h3></div>
+
+<script>
+const API = 'YOUR_APPS_SCRIPT_WEB_APP_URL'; // ends with /exec
+
+let trials=[], idx=0, participant='', tStart=0;
+let current = null;
+
+function qs(s){ return document.querySelector(s); }
+function startTrial(i){
+  const t = trials[i]; current = t;
+  qs('#counter').textContent = `Item ${i+1} / ${trials.length}`;
+  qs('#imgL').src = t.input_url;
+  qs('#imgR').src = t.generalized_url;
+  qs('#text').value = '';
+  tStart = Date.now();
+}
+
+qs('#start').onclick = async ()=>{
+  const url = `${API}?action=init_session`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if(!data.ok){ alert('Init failed'); return; }
+  participant = data.participant_id;
+  trials = data.trials.sort((a,b)=>a.order_index-b.order_index);
+  qs('#welcome').classList.add('hidden');
+  qs('#trial').classList.remove('hidden');
+  startTrial(0);
+};
+
+qs('#submit').onclick = async ()=>{
+  const txt = qs('#text').value.trim();
+  if(txt.split(/\s+/).length < 4){ alert('Please write at least 4 words.'); return; }
+  const dur = Date.now() - tStart;
+  const fd = new URLSearchParams({
+    action:'submit',
+    participant_id: participant,
+    assignment_id: '',  // (optional) if you want to echo back IDs, include in init payload
+    tile_id: current.tile_id,
+    free_text: txt,
+    duration_ms: String(dur),
+    client_meta: JSON.stringify({ua:navigator.userAgent})
+  });
+  const res = await fetch(API, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: fd});
+  const data = await res.json();
+  if(!data.ok){ alert('Submit failed: '+data.error); return; }
+
+  idx++;
+  if(idx >= trials.length){
+    qs('#trial').classList.add('hidden');
+    qs('#done').classList.remove('hidden');
+  } else {
+    startTrial(idx);
+  }
+};
+</script>
+</body>
+</html>
