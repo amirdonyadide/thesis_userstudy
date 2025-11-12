@@ -30,7 +30,7 @@
         <span>I agree to take part in this study.</span>
       </label>
 
-      <button id="startForm" type="submit">Continue</button>
+      <button id="startForm" type="submit" class="primary">Continue</button>
       <p class="help">Your name is only used to issue participation credit; prompts are analyzed anonymously.</p>
     </form>
   </section>
@@ -45,25 +45,29 @@
       <li>Be specific about the <em>operation</em> and its <em>intensity</em> (e.g., “strongly aggregate adjacent small parcels”).</li>
       <li>Please avoid extra words; aim for <strong>5–15 words</strong>.</li>
     </ol>
-    <button id="begin">Start the study</button>
+    <button id="begin" class="primary">Start the study</button>
   </section>
 
   <!-- ========== STEP 3: trials ========== -->
   <section id="trial" class="hidden">
     <h3 id="counter"></h3>
+    <div class="progress"><i id="progFill"></i></div>
     <div class="maps">
       <figure class="pane">
-        <figcaption>Input map</figcaption>
+        <figcaption><span class="badge">Input</span> Input map</figcaption>
         <img id="imgL" alt="Input map">
       </figure>
       <figure class="pane">
-        <figcaption>Generalized map</figcaption>
+        <figcaption><span class="badge">Output</span> Generalized map</figcaption>
         <img id="imgR" alt="Generalized map">
       </figure>
     </div>
     <textarea id="text" placeholder="e.g., strongly simplify small parcels"></textarea>
     <div class="actions">
-      <button id="submit">Submit</button>
+      <button id="submit" class="primary">
+        <span id="submitLabel">Submit</span>
+        <i id="submitSpin" class="spinner hidden"></i>
+      </button>
     </div>
   </section>
 

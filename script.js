@@ -21,17 +21,33 @@ const el = {
   imgR:    $('#imgR'),
   text:    $('#text'),
   submit:  $('#submit'),
+  submitLabel: $('#submitLabel'),
+  submitSpin:  $('#submitSpin'),
   done:    $('#done'),
 };
 
+
 function startTrial(i){
   const t = trials[i]; current = t;
+  el.submit.disabled = true;
+  el.imgL.onload = el.imgR.onload = maybeEnable;
+  el.imgL.onerror = el.imgR.onerror = maybeEnable;
+  function maybeEnable(){ if (el.imgL.complete && el.imgR.complete) el.submit.disabled = false; }
+
   el.counter.textContent = `Item ${i+1} / ${trials.length}`;
+  // ✅ Update progress bar
+  const pct = Math.round((i) / trials.length * 100);
+  const bar = document.getElementById('progFill');
+  if (bar) bar.style.width = `${pct}%`;
+
   el.imgL.src = t.input_url;
   el.imgR.src = t.generalized_url;
   el.text.value = '';
   tStart = Date.now();
   console.log('Image URLs:', t.input_url, t.generalized_url);
+
+  // NEW: focus prompt box
+  setTimeout(()=> el.text.focus(), 0);
 }
 
 // STEP 1: handle form submit → call init_session (with token), then show instructions
@@ -54,11 +70,25 @@ el.form.addEventListener('submit', async (ev)=>{
   try{
     el.form.querySelector('button[type="submit"]').disabled = true;
 
-    // pass token to backend so it can validate (Tokens sheet)
-    const res = await fetch(`${API}?action=init_session&token=${encodeURIComponent(token)}`);
+    // read any saved participant_id to allow resume
+    let pid = localStorage.getItem('study_participant') || '';
+
+    // pass token + name (and participant_id if present) to backend
+    const params = new URLSearchParams({
+      action: 'init_session',
+      token,
+      first_name: f,
+      last_name:  l,
+    });
+
+    // include participant_id when resuming
+    if (pid) params.set('participant_id', pid);
+
+    const res = await fetch(`${API}?${params.toString()}`);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || 'Init failed');
 
+    // Save/refresh participant_id for future resumes
     participant = data.participant_id;
     localStorage.setItem('study_participant', participant);
 
@@ -69,11 +99,12 @@ el.form.addEventListener('submit', async (ev)=>{
     el.welcome.classList.add('hidden');
     el.instructions.classList.remove('hidden');
 
-  }catch(err){
+  } catch(err) {
     alert('Could not start: ' + (err.message || err));
     console.error(err);
     el.form.querySelector('button[type="submit"]').disabled = false;
   }
+
 });
 
 // STEP 2: begin after reading instructions
@@ -83,47 +114,86 @@ el.begin.addEventListener('click', ()=>{
   startTrial(0);
 });
 
-// STEP 3: submit each response
-el.submit.addEventListener('click', async ()=>{
-  const txt = el.text.value.trim();
-  if (txt.split(/\s+/).length < 4){ alert('Please write at least 4 words.'); return; }
-
-  const dur = Date.now() - tStart;
-
-  // attach participant meta (name/token) into client_meta so you can export them later
-  const client_meta = {
-    ua: navigator.userAgent,
-    first: localStorage.getItem('study_first') || '',
-    last: localStorage.getItem('study_last') || '',
-    token: localStorage.getItem('study_token') || ''
-  };
-
-  const fd = new URLSearchParams({
-    action: 'submit',
-    participant_id: participant,
-    assignment_id: current.assignment_id,
-    tile_id: current.tile_id,
-    free_text: txt,
-    duration_ms: String(dur),
-    client_meta: JSON.stringify(client_meta)
-  });
-
-  const res = await fetch(API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: fd
-  });
-  const data = await res.json();
-  if (!data.ok){ alert('Submit failed: ' + data.error); return; }
-
-  idx++;
-  if (idx >= trials.length){
-    el.trial.classList.add('hidden');
-    el.done.classList.remove('hidden');
-  } else {
-    startTrial(idx);
+// Allow Ctrl/Cmd + Enter to submit
+el.text.addEventListener('keydown', (e)=>{
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+    e.preventDefault();
+    el.submit.click();
   }
 });
+
+
+let sending = false;
+// STEP 3: submit each response
+el.submit.addEventListener('click', async ()=>{
+  if (sending) return;
+  sending = true;
+  el.submit.disabled = true;
+
+  // show loading state
+  if (el.submitLabel) el.submitLabel.textContent = 'Submitting...';
+  if (el.submitSpin)  el.submitSpin.classList.remove('hidden');
+
+  const txt = el.text.value.trim();
+  try{
+    if (txt.split(/\s+/).length < 4){
+      alert('Please write at least 4 words.');
+      sending = false;
+      el.submit.disabled = false;
+      // reset visual state
+      if (el.submitLabel) el.submitLabel.textContent = 'Submit';
+      if (el.submitSpin)  el.submitSpin.classList.add('hidden');
+      return;
+    }
+
+    const dur = Date.now() - tStart;
+
+    // attach participant meta (name/token) into client_meta so you can export them later
+    const client_meta = {
+      ua: navigator.userAgent,
+      first: localStorage.getItem('study_first') || '',
+      last:  localStorage.getItem('study_last')  || '',
+      token: localStorage.getItem('study_token') || ''
+    };
+
+    const fd = new URLSearchParams({
+      action: 'submit',
+      participant_id: participant,
+      assignment_id: current.assignment_id,
+      tile_id: current.tile_id,
+      free_text: txt,
+      duration_ms: String(dur),
+      client_meta: JSON.stringify(client_meta)
+    });
+
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: fd
+    });
+    const data = await res.json();
+    if (!data.ok){
+      alert('Submit failed: ' + data.error);
+      return;
+    }
+
+    idx++;
+    if (idx >= trials.length){
+      el.trial.classList.add('hidden');
+      el.done.classList.remove('hidden');
+    } else {
+      startTrial(idx);
+    }
+  }
+  finally {
+    sending = false;
+    el.submit.disabled = false;
+    // reset loading state
+    if (el.submitLabel) el.submitLabel.textContent = 'Submit';
+    if (el.submitSpin)  el.submitSpin.classList.add('hidden');
+  }
+});
+
 
 // (Optional) auto-fill form from previous session
 window.addEventListener('DOMContentLoaded', ()=>{

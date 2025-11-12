@@ -1,72 +1,236 @@
+/* =========================
+   THEME & TOKENS
+   ========================= */
 :root{
-  --maxw: 1000px;
-  --gap: 12px;
+  --maxw: 1040px;
+  --gap: 14px;
+
+  --bg: #0b1020;                 /* backdrop tint */
+  --panel: #ffffff;
+  --panel-2: #f8fafc;            /* soft surface */
   --border: #e5e7eb;
-  --text: #111827;
-  --muted: #6b7280;
-  --accent: #2563eb;
-  --bg: #ffffff;
+
+  --text: #0f172a;               /* slate-900 */
+  --muted: #64748b;              /* slate-500/600 */
+  --accent: #2563eb;             /* blue-600 */
+  --accent-2: #1d4ed8;           /* blue-700 */
+
+  --radius: 14px;
+  --shadow-1: 0 6px 24px rgba(2, 6, 23, 0.06), 0 2px 8px rgba(2, 6, 23, 0.06);
+  --shadow-2: 0 10px 36px rgba(2,6,23,.08), 0 3px 12px rgba(2,6,23,.08);
 }
 
-*{ box-sizing: border-box; }
-html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); }
-body{ max-width:var(--maxw); margin:0 auto; padding:24px; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg: #0b1020;
+    --panel: #0f172a;
+    --panel-2: #0b1224;
+    --border: #1e293b;
 
-h1{ font-size:clamp(28px,4vw,44px); margin:0 0 8px; }
-p.lead{ color:var(--muted); margin:0 0 20px; }
+    --text: #e5e7eb;
+    --muted: #94a3b8;
+
+    --shadow-1: 0 6px 20px rgba(0,0,0,.35);
+    --shadow-2: 0 12px 40px rgba(0,0,0,.45);
+  }
+}
+
+/* =========================
+   BASE
+   ========================= */
+*{ box-sizing: border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 28px 18px 40px;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 50% -80px, rgba(37,99,235,.15), transparent 60%),
+    radial-gradient(900px 500px at -10% -10%, rgba(14,165,233,.12), transparent 60%),
+    var(--bg);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  line-height: 1.6;
+}
 
 .hidden{ display:none; }
 .center{ text-align:center; }
 
+/* =========================
+   TYPOGRAPHY
+   ========================= */
+h1{
+  font-size: clamp(28px, 4.2vw, 42px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+}
+p.lead{
+  color: var(--muted);
+  margin: 0 0 20px;
+  font-size: clamp(15px, 2vw, 18px);
+}
+
+/* =========================
+   CARDS & PANELS
+   ========================= */
 .card{
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:16px;
-  background:#fff;
-  margin:12px 0 18px;
+  background: linear-gradient(180deg, var(--panel), var(--panel));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin: 14px 0 18px;
+  box-shadow: var(--shadow-1);
 }
+.card:hover{ box-shadow: var(--shadow-2); transition: box-shadow .25s ease; }
 
-.row{ display:flex; gap:12px; }
-.row > label{ flex:1; }
+.row{ display:flex; gap: 12px; flex-wrap: wrap; }
+.row > label{ flex: 1 1 260px; }
 
-label{ display:block; font-weight:600; margin:8px 0 6px; }
+label{ display:block; font-weight:600; margin: 6px 0 6px; color: var(--text); }
 label > input{
-  width:100%; padding:10px 12px; border:1px solid var(--border);
-  border-radius:10px; font:inherit;
+  width: 100%; padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px; font: inherit;
+  background: var(--panel-2); color: var(--text);
+  transition: border-color .15s ease, box-shadow .15s ease, background .2s ease;
 }
-label.check{ display:flex; align-items:center; gap:10px; font-weight:400; }
+label > input:focus-visible{
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(37,99,235,.18);
+  background: #fff;
+}
+label.check{ display:flex; align-items:center; gap:10px; font-weight:500; color: var(--muted); }
 label.check input{ width:auto; }
 
-.help{ color:var(--muted); font-size:.9rem; margin-top:8px; }
+.help{ color: var(--muted); font-size: .92rem; margin-top: 8px; }
 
+/* =========================
+   BUTTONS
+   ========================= */
 button{
-  appearance:none; border:1px solid var(--border); background:#fff;
-  padding:8px 14px; border-radius:10px; cursor:pointer; font:inherit;
-  transition:box-shadow .15s ease, transform .02s ease;
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  transition: transform .02s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
 }
-button:hover{ box-shadow:0 1px 6px rgba(0,0,0,.06); }
-button:active{ transform:translateY(1px); }
-button:disabled{ opacity:.6; cursor:not-allowed; }
+button:hover{ box-shadow: 0 4px 18px rgba(0,0,0,.08); }
+button:active{ transform: translateY(1px); }
+button:disabled{ opacity: .6; cursor: not-allowed; }
 
-#counter{ margin:12px 0 10px; font-weight:700; }
+button.primary{
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 30px rgba(37,99,235,.32);
+}
+button.primary:hover{ box-shadow: 0 10px 36px rgba(37,99,235,.4); }
+button.primary:focus-visible{
+  outline: none; box-shadow: 0 0 0 4px rgba(37,99,235,.25);
+}
 
-.maps{ display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
-.pane{ flex:1; margin:0; }
-.pane figcaption{ font-size:.95rem; color:var(--muted); margin:0 0 6px; }
+/* Secondary / subtle */
+button.muted{
+  background: var(--panel-2);
+}
+
+/* =========================
+   PROGRESS / COUNTER
+   ========================= */
+#counter{
+  margin: 12px 0 14px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.progress{
+  height: 8px; border-radius: 999px; background: var(--panel-2);
+  border: 1px solid var(--border);
+  overflow: hidden; margin: 8px 0 14px;
+}
+.progress > i{
+  display:block; height:100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), #38bdf8);
+  transition: width .35s ease;
+}
+
+/* =========================
+   MAPS
+   ========================= */
+.maps{
+  display: flex; gap: var(--gap);
+  align-items: flex-start; margin-bottom: 12px;
+}
+
+.pane{ flex: 1; margin: 0; }
+.pane figcaption{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size: .92rem; color: var(--muted); margin: 0 0 8px;
+}
+.badge{
+  display:inline-block; font-weight:600; font-size:.78rem;
+  padding: 4px 10px; border-radius: 999px;
+  color: #0b1224; background: #e0f2fe; border: 1px solid #bae6fd;
+}
+@media (prefers-color-scheme: dark){
+  .badge{ color: #061226; background: #0b2a40; border-color: #10334b; }
+}
 
 .maps img{
-  width:100%; max-height:420px; object-fit:contain;
-  border:1px solid var(--border); border-radius:12px; background:#fafafa;
+  width: 100%; max-height: 440px; object-fit: contain;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel-2));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
 }
 
+/* =========================
+   TEXTAREA
+   ========================= */
 textarea{
-  width:100%; height:140px; padding:12px 14px;
-  border:1px solid var(--border); border-radius:12px; font:inherit; line-height:1.4; resize:vertical;
+  width: 100%; min-height: 140px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px; font: inherit; line-height: 1.45; resize: vertical;
+  background: var(--panel-2); color: var(--text);
+  transition: border-color .15s ease, box-shadow .15s ease, background .2s ease;
+}
+textarea:focus-visible{
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(37,99,235,.18);
+  background: #fff;
 }
 
-.actions{ margin-top:8px; display:flex; gap:8px; }
+.actions{ margin-top: 10px; display: flex; gap: 10px; }
 
-@media (max-width:760px){
-  .maps{ flex-direction:column; }
-  .maps img{ max-height:360px; }
+/* =========================
+   UTILS
+   ========================= */
+.container{ max-width: var(--maxw); margin: 0 auto; }
+.stack-sm > * + *{ margin-top: 8px; }
+.stack-md > * + *{ margin-top: 12px; }
+.stack-lg > * + *{ margin-top: 18px; }
+
+/* Spinner (you can toggle .spin on buttons if you add an <i class="spinner">) */
+@keyframes spin{ to { transform: rotate(360deg); } }
+.spinner{
+  width:16px; height:16px; border:2px solid rgba(0,0,0,.15);
+  border-top-color: rgba(0,0,0,.5); border-radius:50%;
+  display:inline-block; vertical-align:middle; animation: spin .8s linear infinite; margin-left: 8px;
+}
+@media (prefers-color-scheme: dark){
+  .spinner{ border:2px solid rgba(255,255,255,.2); border-top-color: rgba(255,255,255,.7); }
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 860px){
+  .maps{ flex-direction: column; }
+  .maps img{ max-height: 360px; }
 }
