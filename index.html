@@ -49,15 +49,27 @@ function startTrial(i){
 }
 
 qs('#start').onclick = async ()=>{
-  const url = `${API}?action=init_session`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if(!data.ok){ alert('Init failed'); return; }
-  participant = data.participant_id;
-  trials = data.trials.sort((a,b)=>a.order_index-b.order_index);
-  qs('#welcome').classList.add('hidden');
-  qs('#trial').classList.remove('hidden');
-  startTrial(0);
+  try {
+    qs('#start').disabled = true;
+    const res = await fetch(`${API}?action=init_session`);
+    // If the request failed due to CORS or permissions, the next line will throw:
+    const data = await res.json();
+    console.log('init data:', data);
+
+    if (!data.ok) throw new Error(data.error || 'Init failed');
+
+    participant = data.participant_id;
+    trials = (data.trials || []).sort((a,b)=>a.order_index-b.order_index);
+    if (trials.length === 0) throw new Error('No trials returned');
+
+    qs('#welcome').classList.add('hidden');
+    qs('#trial').classList.remove('hidden');
+    startTrial(0);
+  } catch (err) {
+    alert('Start error: ' + (err.message || err));
+    console.error(err);
+    qs('#start').disabled = false;
+  }
 };
 
 qs('#submit').onclick = async ()=>{
