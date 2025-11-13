@@ -215,8 +215,10 @@ el.submit.addEventListener('click', async ()=>{
       tile_id: current.tile_id,
       free_text: txt,
       duration_ms: String(dur),
-      client_meta: JSON.stringify(client_meta)
+      order_index: String(idx + 1),
+      token: state.token
     });
+
 
     // Add last-item info for backend
     const isLast = (idx === trials.length - 1);
