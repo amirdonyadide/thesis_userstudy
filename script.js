@@ -38,6 +38,18 @@ const state = {
   token: ''
 };
 
+function updateSubmitButtonLabel(i) {
+  if (!el.submitLabel || !trials.length) return;
+
+  if (i < trials.length - 1) {
+    el.submitLabel.textContent = 'Next';          // all but last
+  } else {
+    el.submitLabel.textContent = 'Finish study';  // last trial
+  }
+}
+
+
+
 function startTrial(i){
   const t = trials[i];
   current = t;
@@ -76,6 +88,9 @@ function startTrial(i){
     img1.src = next.input_url;
     img2.src = next.generalized_url;
   }
+
+  // ✅ NEW: set button label for this trial
+  updateSubmitButtonLabel(i);
 }
 
 // STEP 1: form submit → init_session
@@ -152,6 +167,10 @@ el.form.addEventListener('submit', async (ev)=>{
 el.begin.addEventListener('click', ()=>{
   el.instructions.classList.add('hidden');
   el.trial.classList.remove('hidden');
+
+  // 🔽 make header compact from now on (hide description + info)
+  document.body.classList.add('compact-header');
+
   idx = 0;
   startTrial(0);
 });
@@ -235,8 +254,8 @@ el.submit.addEventListener('click', async ()=>{
   } finally {
     sending = false;
     el.submit.disabled = false;
-    if (el.submitLabel) el.submitLabel.textContent = 'Submit';
     if (el.submitSpin)  el.submitSpin.classList.add('hidden');
+    updateSubmitButtonLabel(idx);   // restore correct label for current trial
   }
 });
 
@@ -250,3 +269,4 @@ window.addEventListener('DOMContentLoaded', ()=>{
   if (l) { el.last.value  = l; state.last  = l; }
   if (t) { el.token.value = t; state.token = t; }
 });
+
