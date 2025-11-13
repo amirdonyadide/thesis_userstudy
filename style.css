@@ -218,13 +218,35 @@ textarea:focus-visible{
 
 /* Spinner (you can toggle .spin on buttons if you add an <i class="spinner">) */
 @keyframes spin{ to { transform: rotate(360deg); } }
-.spinner{
-  width:16px; height:16px; border:2px solid rgba(0,0,0,.15);
-  border-top-color: rgba(0,0,0,.5); border-radius:50%;
-  display:inline-block; vertical-align:middle; animation: spin .8s linear infinite; margin-left: 8px;
+.spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.15);
+  border-top-color: rgba(0, 0, 0, 0.6);
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  margin-left: 8px;
+  box-sizing: border-box;
 }
+
 @media (prefers-color-scheme: dark){
-  .spinner{ border:2px solid rgba(255,255,255,.2); border-top-color: rgba(255,255,255,.7); }
+  .badge{
+    color: #e5e7eb;
+    background: #0b2a40;
+    border-color: #10334b;
+  }
+}
+
+
+/* ensure hidden wins */
+.spinner.hidden {
+  display: none;
+}
+
+#submitLabel,
+#submitSpin {
+  flex-shrink: 0;
 }
 
 /* =========================
@@ -233,4 +255,49 @@ textarea:focus-visible{
 @media (max-width: 860px){
   .maps{ flex-direction: column; }
   .maps img{ max-height: 360px; }
+}
+
+/* Ensure main interactive text uses the theme text color */
+input,
+textarea,
+button,
+label,
+#counter,
+h2,
+ol,
+ol li {
+  color: var(--text);
+}
+
+/* Muted text where it should be muted */
+.lead,
+.help,
+label.check span,
+.pane figcaption {
+  color: var(--muted);
+}
+
+input::placeholder,
+textarea::placeholder{
+  color: var(--muted);
+  opacity: 0.9;   /* keep it visible */
+}
+
+
+
+/* Always-dark prompt box */
+textarea {
+  background: #0f172a !important;   /* dark slate background */
+  color: #e5e7eb !important;        /* light text */
+  border: 1px solid #1e293b !important;  /* subtle border */
+}
+
+/* Placeholder also visible */
+textarea::placeholder {
+  color: #94a3b8 !important;        /* muted-light placeholder */
+  opacity: 1;
+}
+
+textarea:focus-visible {
+  box-shadow: 0 0 0 4px rgba(37,99,235,.35) !important;
 }

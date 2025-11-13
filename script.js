@@ -122,7 +122,6 @@ el.text.addEventListener('keydown', (e)=>{
   }
 });
 
-
 let sending = false;
 // STEP 3: submit each response
 el.submit.addEventListener('click', async ()=>{
@@ -148,7 +147,6 @@ el.submit.addEventListener('click', async ()=>{
 
     const dur = Date.now() - tStart;
 
-    // attach participant meta (name/token) into client_meta so you can export them later
     const client_meta = {
       ua: navigator.userAgent,
       first: localStorage.getItem('study_first') || '',
@@ -188,12 +186,11 @@ el.submit.addEventListener('click', async ()=>{
   finally {
     sending = false;
     el.submit.disabled = false;
-    // reset loading state
+    // hide spinner + reset label
     if (el.submitLabel) el.submitLabel.textContent = 'Submit';
     if (el.submitSpin)  el.submitSpin.classList.add('hidden');
   }
 });
-
 
 // (Optional) auto-fill form from previous session
 window.addEventListener('DOMContentLoaded', ()=>{
