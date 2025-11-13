@@ -201,13 +201,6 @@ el.submit.addEventListener('click', async ()=>{
 
     const dur = Date.now() - tStart;
 
-    const client_meta = {
-      ua: navigator.userAgent,
-      first: state.first,
-      last:  state.last,
-      token: state.token
-    };
-
     const isLast = (idx === trials.length - 1);
 
     const fd = new URLSearchParams({
