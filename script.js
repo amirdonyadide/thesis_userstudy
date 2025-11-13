@@ -220,7 +220,7 @@ el.submit.addEventListener('click', async ()=>{
     });
 
 
-    // Add last-item info for backend
+    // Add last-item info for backend 
     const isLast = (idx === trials.length - 1);
     fd.append("order_index", String(idx + 1));
     fd.append("is_last", isLast ? "1" : "0");
