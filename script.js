@@ -218,10 +218,10 @@ el.submit.addEventListener('click', async ()=>{
       client_meta: JSON.stringify(client_meta)
     });
 
-    // ✅ NEW: tell backend if this is the last trial
+    // Add last-item info for backend
     const isLast = (idx === trials.length - 1);
-    fd.append('is_last', isLast ? '1' : '0');
-    fd.append('order_index', String(idx + 1));
+    fd.append("order_index", String(idx + 1));
+    fd.append("is_last", isLast ? "1" : "0");
 
     const res = await fetch(API, {
       method: 'POST',
