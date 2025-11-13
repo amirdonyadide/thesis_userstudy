@@ -208,6 +208,8 @@ el.submit.addEventListener('click', async ()=>{
       token: state.token
     };
 
+    const isLast = (idx === trials.length - 1);
+
     const fd = new URLSearchParams({
       action: 'submit',
       participant_id: participant,
@@ -217,14 +219,10 @@ el.submit.addEventListener('click', async ()=>{
       duration_ms: String(dur),
       order_index: String(idx + 1),
       token: state.token,
-      first_name: state.first,
-      last_name: state.last
+      first_name: state.first,   // ✅ send first name
+      last_name:  state.last,    // ✅ send last name
+      is_last: isLast ? '1' : '0'
     });
-
-    // Add last-item info for backend 
-    const isLast = (idx === trials.length - 1);
-    fd.append("order_index", String(idx + 1));
-    fd.append("is_last", isLast ? "1" : "0");
 
     const res = await fetch(API, {
       method: 'POST',
