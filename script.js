@@ -1,6 +1,5 @@
 // script.js
 const API = 'https://script.google.com/macros/s/AKfycbwy-WwkVBq7iDytfCG7g-vGulbr0SmE2RAOCxR6dL-vFVWV26eQIAMXB6Jfr2jVdQQ31A/exec';
-
 let trials = [];
 let idx = 0;
 let participant = '';
@@ -218,6 +217,11 @@ el.submit.addEventListener('click', async ()=>{
       duration_ms: String(dur),
       client_meta: JSON.stringify(client_meta)
     });
+
+    // ✅ NEW: tell backend if this is the last trial
+    const isLast = (idx === trials.length - 1);
+    fd.append('is_last', isLast ? '1' : '0');
+    fd.append('order_index', String(idx + 1));
 
     const res = await fetch(API, {
       method: 'POST',
