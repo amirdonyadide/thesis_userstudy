@@ -6,6 +6,8 @@ let participant = '';
 let tStart = 0;
 let current = null;
 let sending = false;  // block double-clicks
+let resumeIndex = 0;   // where to start when user resumes
+
 
 // cache elements
 const $ = (s)=>document.querySelector(s);
@@ -145,6 +147,9 @@ el.form.addEventListener('submit', async (ev)=>{
     trials = (data.trials || []).sort((a,b)=>a.order_index-b.order_index);
     if (trials.length === 0) throw new Error('No trials returned');
 
+    // 👇 NEW: how many items already answered last time?
+    resumeIndex = data.answered_count || 0;
+
     // ✅ warm up cache for first 2–3 items
     for (let k = 0; k < Math.min(3, trials.length); k++){
       const tt = trials[k];
@@ -170,8 +175,9 @@ el.begin.addEventListener('click', ()=>{
   // 🔽 make header compact from now on (hide description + info)
   document.body.classList.add('compact-header');
 
-  idx = 0;
-  startTrial(0);
+  // 👇 start from first *unanswered* trial
+  idx = resumeIndex;
+  startTrial(idx);
 });
 
 // Ctrl/Cmd + Enter to submit
