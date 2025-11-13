@@ -1,8 +1,12 @@
 // script.js
 const API = 'https://script.google.com/macros/s/AKfycbwy-WwkVBq7iDytfCG7g-vGulbr0SmE2RAOCxR6dL-vFVWV26eQIAMXB6Jfr2jVdQQ31A/exec';
 
-let trials = [], idx = 0, participant = '', tStart = 0;
+let trials = [];
+let idx = 0;
+let participant = '';
+let tStart = 0;
 let current = null;
+let sending = false;  // block double-clicks
 
 // cache elements
 const $ = (s)=>document.querySelector(s);
@@ -24,19 +28,38 @@ const el = {
   submitLabel: $('#submitLabel'),
   submitSpin:  $('#submitSpin'),
   done:    $('#done'),
+  progFill: $('#progFill'),
+};
+
+// small in-memory state so we don't hammer localStorage
+const state = {
+  first: '',
+  last:  '',
+  token: ''
 };
 
 function startTrial(i){
-  const t = trials[i]; current = t;
-  el.submit.disabled = true;
-  el.imgL.onload = el.imgR.onload = maybeEnable;
-  el.imgL.onerror = el.imgR.onerror = maybeEnable;
-  function maybeEnable(){ if (el.imgL.complete && el.imgR.complete) el.submit.disabled = false; }
+  const t = trials[i];
+  current = t;
 
+  // disable submit until both images are loaded (or error)
+  el.submit.disabled = true;
+  function maybeEnable(){
+    if (el.imgL.complete && el.imgR.complete) {
+      el.submit.disabled = false;
+    }
+  }
+  el.imgL.onload  = maybeEnable;
+  el.imgR.onload  = maybeEnable;
+  el.imgL.onerror = maybeEnable;
+  el.imgR.onerror = maybeEnable;
+
+  // counter + progress
   el.counter.textContent = `Item ${i+1} / ${trials.length}`;
-  const pct = Math.round((i) / trials.length * 100);
-  const bar = document.getElementById('progFill');
-  if (bar) bar.style.width = `${pct}%`;
+  if (el.progFill) {
+    const pct = Math.round((i) / trials.length * 100);
+    el.progFill.style.width = `${pct}%`;
+  }
 
   // current images
   el.imgL.src = t.input_url;
@@ -55,8 +78,7 @@ function startTrial(i){
   }
 }
 
-
-// STEP 1: handle form submit → call init_session (with token), then show instructions
+// STEP 1: form submit → init_session
 el.form.addEventListener('submit', async (ev)=>{
   ev.preventDefault();
   if (!el.consent.checked) { alert('Please agree to participate.'); return; }
@@ -68,65 +90,73 @@ el.form.addEventListener('submit', async (ev)=>{
   if (f.length < 2 || l.length < 2){ alert('Please enter your first and last name.'); return; }
   if (!token){ alert('Please enter your access key.'); return; }
 
-  // store locally so refresh resumes
+  // update state + save locally
+  state.first = f;
+  state.last  = l;
+  state.token = token;
   localStorage.setItem('study_first', f);
-  localStorage.setItem('study_last', l);
+  localStorage.setItem('study_last',  l);
   localStorage.setItem('study_token', token);
 
+  const startBtn = el.form.querySelector('button[type="submit"]');
   try{
-    el.form.querySelector('button[type="submit"]').disabled = true;
+    if (startBtn) startBtn.disabled = true;
 
-    // read any saved participant_id to allow resume
+    // resume support
     let pid = localStorage.getItem('study_participant') || '';
 
-    // pass token + name (and participant_id if present) to backend
     const params = new URLSearchParams({
       action: 'init_session',
       token,
       first_name: f,
       last_name:  l,
     });
-
-    // include participant_id when resuming
     if (pid) params.set('participant_id', pid);
 
     const res = await fetch(`${API}?${params.toString()}`);
+    // 👀 better error handling for init_session
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('init_session error body:', text);
+      throw new Error(`init_session HTTP ${res.status}`);
+    }
+
     const data = await res.json();
+    console.log('init_session', data);
     if (!data.ok) throw new Error(data.error || 'Init failed');
 
-    // Save/refresh participant_id for future resumes
     participant = data.participant_id;
     localStorage.setItem('study_participant', participant);
 
     trials = (data.trials || []).sort((a,b)=>a.order_index-b.order_index);
     if (trials.length === 0) throw new Error('No trials returned');
+
     // ✅ warm up cache for first 2–3 items
     for (let k = 0; k < Math.min(3, trials.length); k++){
-    const t = trials[k];
-    const a = new Image(); a.src = t.input_url;
-    const b = new Image(); b.src = t.generalized_url;
-}
+      const tt = trials[k];
+      const a = new Image(); a.src = tt.input_url;
+      const b = new Image(); b.src = tt.generalized_url;
+    }
 
-    // show instructions next
     el.welcome.classList.add('hidden');
     el.instructions.classList.remove('hidden');
 
   } catch(err) {
     alert('Could not start: ' + (err.message || err));
     console.error(err);
-    el.form.querySelector('button[type="submit"]').disabled = false;
+    if (startBtn) startBtn.disabled = false;
   }
-
 });
 
 // STEP 2: begin after reading instructions
 el.begin.addEventListener('click', ()=>{
   el.instructions.classList.add('hidden');
   el.trial.classList.remove('hidden');
+  idx = 0;
   startTrial(0);
 });
 
-// Allow Ctrl/Cmd + Enter to submit
+// Ctrl/Cmd + Enter to submit
 el.text.addEventListener('keydown', (e)=>{
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
     e.preventDefault();
@@ -134,7 +164,6 @@ el.text.addEventListener('keydown', (e)=>{
   }
 });
 
-let sending = false;
 // STEP 3: submit each response
 el.submit.addEventListener('click', async ()=>{
   if (sending) return;
@@ -149,11 +178,6 @@ el.submit.addEventListener('click', async ()=>{
   try{
     if (txt.split(/\s+/).length < 4){
       alert('Please write at least 4 words.');
-      sending = false;
-      el.submit.disabled = false;
-      // reset visual state
-      if (el.submitLabel) el.submitLabel.textContent = 'Submit';
-      if (el.submitSpin)  el.submitSpin.classList.add('hidden');
       return;
     }
 
@@ -161,9 +185,9 @@ el.submit.addEventListener('click', async ()=>{
 
     const client_meta = {
       ua: navigator.userAgent,
-      first: localStorage.getItem('study_first') || '',
-      last:  localStorage.getItem('study_last')  || '',
-      token: localStorage.getItem('study_token') || ''
+      first: state.first,
+      last:  state.last,
+      token: state.token
     };
 
     const fd = new URLSearchParams({
@@ -181,7 +205,17 @@ el.submit.addEventListener('click', async ()=>{
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: fd
     });
+
+    // 👀 better error handling for submit
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('submit error body:', text);
+      alert(`Server error while saving your answer (HTTP ${res.status}). Please try again.`);
+      return;
+    }
+
     const data = await res.json();
+    console.log('submit response', data);
     if (!data.ok){
       alert('Submit failed: ' + data.error);
       return;
@@ -194,19 +228,25 @@ el.submit.addEventListener('click', async ()=>{
     } else {
       startTrial(idx);
     }
-  }
-  finally {
+  } catch (err){
+    // This is when fetch truly fails (offline, CORS, etc.)
+    alert('Network error while submitting. Please try again.');
+    console.error('submit exception', err);
+  } finally {
     sending = false;
     el.submit.disabled = false;
-    // hide spinner + reset label
     if (el.submitLabel) el.submitLabel.textContent = 'Submit';
     if (el.submitSpin)  el.submitSpin.classList.add('hidden');
   }
 });
 
-// (Optional) auto-fill form from previous session
+// Auto-fill form from previous session
 window.addEventListener('DOMContentLoaded', ()=>{
-  const f = localStorage.getItem('study_first'); if (f) el.first.value = f;
-  const l = localStorage.getItem('study_last');  if (l) el.last.value = l;
-  const t = localStorage.getItem('study_token'); if (t) el.token.value = t;
+  const f = localStorage.getItem('study_first'); 
+  const l = localStorage.getItem('study_last');  
+  const t = localStorage.getItem('study_token'); 
+
+  if (f) { el.first.value = f; state.first = f; }
+  if (l) { el.last.value  = l; state.last  = l; }
+  if (t) { el.token.value = t; state.token = t; }
 });
