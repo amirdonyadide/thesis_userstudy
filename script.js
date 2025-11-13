@@ -26,7 +26,6 @@ const el = {
   done:    $('#done'),
 };
 
-
 function startTrial(i){
   const t = trials[i]; current = t;
   el.submit.disabled = true;
@@ -35,20 +34,27 @@ function startTrial(i){
   function maybeEnable(){ if (el.imgL.complete && el.imgR.complete) el.submit.disabled = false; }
 
   el.counter.textContent = `Item ${i+1} / ${trials.length}`;
-  // ✅ Update progress bar
   const pct = Math.round((i) / trials.length * 100);
   const bar = document.getElementById('progFill');
   if (bar) bar.style.width = `${pct}%`;
 
+  // current images
   el.imgL.src = t.input_url;
   el.imgR.src = t.generalized_url;
   el.text.value = '';
   tStart = Date.now();
-  console.log('Image URLs:', t.input_url, t.generalized_url);
-
-  // NEW: focus prompt box
   setTimeout(()=> el.text.focus(), 0);
+
+  // ✅ PRELOAD NEXT PAIR
+  if (i + 1 < trials.length){
+    const next = trials[i+1];
+    const img1 = new Image();
+    const img2 = new Image();
+    img1.src = next.input_url;
+    img2.src = next.generalized_url;
+  }
 }
+
 
 // STEP 1: handle form submit → call init_session (with token), then show instructions
 el.form.addEventListener('submit', async (ev)=>{
@@ -94,6 +100,12 @@ el.form.addEventListener('submit', async (ev)=>{
 
     trials = (data.trials || []).sort((a,b)=>a.order_index-b.order_index);
     if (trials.length === 0) throw new Error('No trials returned');
+    // ✅ warm up cache for first 2–3 items
+    for (let k = 0; k < Math.min(3, trials.length); k++){
+    const t = trials[k];
+    const a = new Image(); a.src = t.input_url;
+    const b = new Image(); b.src = t.generalized_url;
+}
 
     // show instructions next
     el.welcome.classList.add('hidden');
