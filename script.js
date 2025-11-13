@@ -216,9 +216,10 @@ el.submit.addEventListener('click', async ()=>{
       free_text: txt,
       duration_ms: String(dur),
       order_index: String(idx + 1),
-      token: state.token
+      token: state.token,
+      first_name: state.first,
+      last_name: state.last
     });
-
 
     // Add last-item info for backend 
     const isLast = (idx === trials.length - 1);
