@@ -146,7 +146,24 @@ el.form.addEventListener("submit", async (ev) => {
 
     const data = await res.json();
     console.log("init_session", data);
-    if (!data.ok) throw new Error(data.error || "Init failed");
+    if (!data.ok) {
+      if (data.error === "invalid_or_used_token") {
+        alert(
+          "This access key is invalid or already used. Please check and try again."
+        );
+        if (startBtn) startBtn.disabled = false;
+        return;
+      }
+      if (data.error === "lock_timeout") {
+        alert(
+          "The server was busy starting your session. Please click Start again."
+        );
+        if (startBtn) startBtn.disabled = false;
+        return;
+      }
+      // fallback
+      throw new Error(data.error || "Init failed");
+    }
 
     participant = data.participant_id;
     localStorage.setItem("study_participant", participant);
@@ -175,7 +192,6 @@ el.form.addEventListener("submit", async (ev) => {
   }
 });
 
-// STEP 2: begin after reading instructions
 el.begin.addEventListener("click", () => {
   el.instructions.classList.add("hidden");
   el.trial.classList.remove("hidden");
@@ -185,6 +201,14 @@ el.begin.addEventListener("click", () => {
 
   // 👇 start from first *unanswered* trial
   idx = resumeIndex;
+
+  // ✅ if user already finished all items, show the "done" screen instead
+  if (idx >= trials.length) {
+    el.trial.classList.add("hidden");
+    el.done.classList.remove("hidden");
+    return;
+  }
+
   startTrial(idx);
 });
 
@@ -250,11 +274,21 @@ el.submit.addEventListener("click", async () => {
     const data = await res.json();
     console.log("submit response", data);
     if (!data.ok) {
+      if (data.error === "lock_timeout") {
+        alert("The server was busy. Please press Submit again.");
+        return;
+      }
       alert("Submit failed: " + data.error);
       return;
     }
 
+    // ok === true
+    if (data.skipped === "duplicate_assignment") {
+      console.log("Duplicate submit detected; backend skipped writing.");
+    }
+
     idx++;
+
     if (idx >= trials.length) {
       el.trial.classList.add("hidden");
       el.done.classList.remove("hidden");
