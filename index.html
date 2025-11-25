@@ -102,8 +102,8 @@
                 You do <strong>not</strong> need any mapping or GIS
                 knowledge.<br />
                 Simply describe what you notice <br />
-                for example: “combine nearby small shapes”, “remove tiny
-                buildings”, “simplify the outlines”.
+                for example: “combine neighbour buildings”, “remove buildings
+                smaller than 100 sqaured meters”, “simplify the outlines”.
               </li>
 
               <li>
@@ -118,9 +118,20 @@
 
         <!-- ========== STEP 3: trials (viewport-aware layout) ========== -->
         <section id="trial" class="hidden trial-layout">
-          <h3 id="counter"></h3>
-          <div class="progress"><i id="progFill"></i></div>
+          <!-- ===== Block 1: title + counter/progress ===== -->
+          <div class="trial-top">
+            <div class="trial-top-left">
+              <h2 class="trial-title">Text1</h2>
+              <p class="trial-subtitle">Text2</p>
+            </div>
 
+            <div class="trial-top-right">
+              <h3 id="counter"></h3>
+              <div class="progress"><i id="progFill"></i></div>
+            </div>
+          </div>
+
+          <!-- ===== Block 2: maps (left/right) ===== -->
           <div class="maps">
             <figure class="pane">
               <figcaption>
@@ -136,10 +147,13 @@
             </figure>
           </div>
 
+          <!-- ===== Block 3: user prompt ===== -->
           <section class="answer">
-            <label for="text">Which prompt would you have used to generate the generalized map based on the input?</label>
+            <label for="text">
+              Which prompt would you have used to generate the generalized map
+              based on the input?
+            </label>
 
-            <!-- textarea + button on one row -->
             <div class="answer-row">
               <textarea id="text" placeholder="text3"></textarea>
               <button id="submit" class="primary">

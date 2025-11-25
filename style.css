@@ -2,7 +2,7 @@
    THEME & TOKENS
    ========================= */
 :root {
-  --maxw: 1040px;
+  --maxw: 1500px;
   --gap: 14px;
 
   /* always-dark theme */
@@ -308,12 +308,16 @@ body.compact-header .site-header.hero {
 }
 
 .pane figcaption {
-  display: inline-flex;
+  display: flex;
+  justify-content: center;   /* center horizontally */
   align-items: center;
   gap: 8px;
   font-size: 0.92rem;
   margin: 0 0 4px;
+  text-align: center;        /* make sure text is centered */
+  width: 100%;               /* ensures caption spans full pane width */
 }
+
 
 .badge {
   display: inline-block;
@@ -330,7 +334,7 @@ body.compact-header .site-header.hero {
   flex: 1 1 0;
   width: 100%;
   height: 100%;
-  max-height: 60vh; /* allow more vertical space */
+  max-height: 70vh; /* allow more vertical space */
   object-fit: contain;
   background: linear-gradient(180deg, var(--panel-2), var(--panel-2));
   border: 1px solid var(--border);
@@ -530,4 +534,54 @@ button.muted {
 #submitLabel,
 #submitSpin {
   flex-shrink: 0;
+}
+
+/* ===== Block 1: Text1/Text2 on the left, counter+bar on the right ===== */
+.trial-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.trial-top-left {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.trial-title {
+  margin: 0;
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+
+.trial-subtitle {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* right side: counter + skinny bar */
+.trial-top-right {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.trial-top-right #counter {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.trial-top-right .progress {
+  width: 100%;
+  height: 6px;
+  margin: 0;
+}
+
+.app.in-trial .site-header {
+  display: none;
 }

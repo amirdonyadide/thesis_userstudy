@@ -197,7 +197,7 @@ el.begin.addEventListener("click", () => {
   el.trial.classList.remove("hidden");
 
   // 🔽 make header compact from now on (hide description + info)
-  document.body.classList.add("compact-header");
+  document.querySelector(".app").classList.add("in-trial");
 
   // 👇 start from first *unanswered* trial
   idx = resumeIndex;
